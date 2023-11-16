@@ -49,3 +49,9 @@ For each move we assign a different weight, and the final move will be the one w
 
 ## Final results
 To be continued... :)
+
+
+
+
+
+Code developed by  and [Michelangelo Caretto](https://github.com/rasenqt/computational_intelligence23_24) and [Silvio Chito](https://github.com/SilvioChito/computational_intelligence)   
