@@ -48,7 +48,7 @@ Every strategy is represented by a tuple composed of a real number (the weight) 
 For each move we assign a different weight, and the final move will be the one with the higher weight. In case we have the same move with different weight, we add up the weights and consider them as a single move.
 
 ## Final results
-To be continued... :)
+
 
 
 
