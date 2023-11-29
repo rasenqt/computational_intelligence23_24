@@ -21,14 +21,20 @@ class AbstractProblem:
     @staticmethod
     def onemax(genome):
         return sum(bool(g) for g in genome)
-
+     ##Slice the problem  with step sixe of self.x(problme size) and calculate fitness of each slice and then adad together 
+     #slice overlaps if self.x>1
     def __call__(self, genome):
         self._calls += 1
         fitnesses = sorted((AbstractProblem.onemax(genome[s :: self.x]) for s in range(self.x)), reverse=True)
+        sum1=sum(f for f in fitnesses if f == fitnesses[0])
+        sum2=sum(f * (0.1 ** (k + 1)) for k, f in enumerate(f for f in fitnesses if f < fitnesses[0]))
         val = sum(f for f in fitnesses if f == fitnesses[0]) - sum(
             f * (0.1 ** (k + 1)) for k, f in enumerate(f for f in fitnesses if f < fitnesses[0])
         )
-        return val / len(genome)
+        
+        return  sum1,sum2,val
+      
+    
 
 
 def make_problem(a):
