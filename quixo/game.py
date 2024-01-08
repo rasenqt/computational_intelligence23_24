@@ -36,7 +36,7 @@ class Player(ABC):
 class Game(object):
     def __init__(self) -> None:
         self._board = np.ones((5, 5), dtype=np.uint8) * -1
-        self.current_player_idx = 1
+        self.current_player_idx = 0
 
     def get_board(self) -> np.ndarray:
         '''
@@ -54,7 +54,7 @@ class Game(object):
         '''Prints the board. -1 are neutral pieces, 0 are pieces of player 0, 1 pieces of player 1'''
         print(self._board)
 
-    def check_winner(self) -> int:
+    def check_winner(self) -> int:  #return 1 for player 1 or 0 for player 0
         '''Check the winner. Returns the player ID of the winner if any, otherwise returns -1'''
         # for each row
         for x in range(self._board.shape[0]):
@@ -96,6 +96,7 @@ class Game(object):
                 from_pos, slide = players[self.current_player_idx].make_move(
                     self)
                 ok = self.__move(from_pos, slide, self.current_player_idx)
+                
             winner = self.check_winner()
         return winner
 
