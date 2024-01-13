@@ -487,10 +487,10 @@ class Game(object):
             self.current_player_idx += 1
             self.current_player_idx %= len(players)
             ok = False
-            while not ok:
-                from_pos, slide = players[self.current_player_idx].make_move(
+           # while not ok:
+            from_pos, slide = players[self.current_player_idx].make_move(
                     self)
-                ok = self._Game__move(from_pos, slide, self.current_player_idx)
+                #ok = self._Game__move(from_pos, slide, self.current_player_idx)
                 
             winner = self.check_winner()
         return winner
@@ -516,12 +516,12 @@ class Game(object):
         if player_id > 2:
             return False
         # Oh God, Numpy arrays
-        prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
-        acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
+        prev_value = deepcopy(self._board[(from_pos[0], from_pos[1])])
+        acceptable = self.__take((from_pos[0], from_pos[1]), player_id)
         if acceptable:
-            acceptable = self.__slide((from_pos[1], from_pos[0]), slide)
+            acceptable = self.__slide((from_pos[0], from_pos[1]), slide)
             if not acceptable:
-                self._board[(from_pos[1], from_pos[0])] = deepcopy(prev_value)
+                self._board[(from_pos[0], from_pos[1])] = deepcopy(prev_value)
         return acceptable
     
     def __move_rotation(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
