@@ -75,19 +75,27 @@ class MyPlayer(Player):
     def __init__(self) -> None:
         super().__init__()
         # inserisci qui la rete
-        self.device = ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = ("cuda:0" if torch.cuda.is_available() else "cpu")
         self.GeneratorNet = QuixoNet().to(self.device)
         self.TargetNet = QuixoNet().to(self.device)
-        self.criterion = nn.SmoothL1Loss()
+        self.criterion = nn.SmoothL1Loss().to(self.device)
         #self.criterion = nn.MSELoss()
         #self.optimizer = torch.optim.SGD(self.GeneratorNet.parameters(), lr=0.001, momentum=0.9)
         self.optimizer = torch.optim.Adam(self.GeneratorNet.parameters(), lr=0.001)
 
         self.last_action_value = 0.0
         self.last_action_number=0
+        self.step=0
         
         
     def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
+     
+     step=self.step;
+     initial_epsilon = 1.0
+     decay_rate = 0.001
+     epsilon = initial_epsilon * np.exp(-decay_rate * step)
+
+     if np.random.random() > epsilon: #epsilon
         nn_input = game.get_flat_board()
         nn_input = torch.tensor(nn_input, dtype=torch.float32).to(self.device)
         out = self.GeneratorNet(nn_input) # ritorna 44 uscite, da qui ricavare il numero dell'azione e la direzione della migliori
@@ -111,9 +119,18 @@ class MyPlayer(Player):
             
              
         return  (from_pos, move) #,action
+     else: 
+       ok=False
+       while not ok:
+              from_pos = (random.randint(0, 4), random.randint(0, 4))
+              move = random.choice([Move.TOP, Move.BOTTOM, Move.LEFT, Move.RIGHT])
+              ok = game._Game__move(from_pos, move, game.current_player_idx)   
+              self.last_action_number=translate_position_to_number(from_pos)
+       return (from_pos, move)
     
     def myplayer_zero_grad(self):
           self.optimizer.zero_grad()
+          
     def downstream(self,game: 'Game',net: QuixoNet):
          tensor=torch.tensor(game.get_flat_board(), dtype=torch.float32).to(self.device)
          output=net(tensor)
@@ -283,6 +300,21 @@ def translate_number_to_position(number)->tuple[int, int]:
             return (4 - (number - 13), 0)
        else:
          return None
+       
+def translate_position_to_number(position: tuple[int, int]) -> int:
+    '''Translate row, col into Position (1-16)'''
+    row, col = position
+    if 0 <= row <= 4 and 0 <= col <= 4:
+        if row == 0:
+            return col + 1
+        elif col == 4:
+            return 5 + row
+        elif row == 4:
+            return 9 + (4 - col)
+        elif col == 0:
+            return 13 + (4 - row)
+    return None
+       
        
 
 class Game(object):
