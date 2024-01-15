@@ -78,24 +78,26 @@ class MyPlayer(Player):
         self.device = ("cuda:0" if torch.cuda.is_available() else "cpu")
         self.GeneratorNet = QuixoNet().to(self.device)
         self.TargetNet = QuixoNet().to(self.device)
-        self.criterion = nn.SmoothL1Loss().to(self.device)
-        #self.criterion = nn.MSELoss()
+        #self.criterion = nn.SmoothL1Loss().to(self.device)
+        self.criterion = nn.MSELoss().to(self.device)
         #self.optimizer = torch.optim.SGD(self.GeneratorNet.parameters(), lr=0.001, momentum=0.9)
         self.optimizer = torch.optim.Adam(self.GeneratorNet.parameters(), lr=0.001)
 
         self.last_action_value = 0.0
         self.last_action_number=0
-        self.step=0
+        self.step=1.0
         
         
     def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
      
-     step=self.step;
-     initial_epsilon = 1.0
-     decay_rate = 0.001
-     epsilon = initial_epsilon * np.exp(-decay_rate * step)
+     
+     
+     decay_rate = 0.99
 
-     if np.random.random() > epsilon: #epsilon
+     self.step = max(0.1, self.step* decay_rate)
+
+
+     if np.random.random() < self.step: #epsilon
         nn_input = game.get_flat_board()
         nn_input = torch.tensor(nn_input, dtype=torch.float32).to(self.device)
         out = self.GeneratorNet(nn_input) # ritorna 44 uscite, da qui ricavare il numero dell'azione e la direzione della migliori
@@ -170,6 +172,45 @@ class MyPlayer(Player):
  
  
     ##translate into (Position,Move)
+
+
+class TrainedPlayer(Player):
+    def __init__(self) -> None:
+        super().__init__()
+        # inserisci qui la rete
+        self.device = ("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.GeneratorNet = QuixoNet().to(self.device)
+       
+        
+        
+    def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
+     
+     
+        nn_input = game.get_flat_board()
+        nn_input = torch.tensor(nn_input, dtype=torch.float32).to(self.device)
+        out = self.GeneratorNet(nn_input) # ritorna 44 uscite, da qui ricavare il numero dell'azione e la direzione della migliori
+        out = out.cpu().detach().numpy()
+        #print(out)
+        index = np.argsort(out)
+        pos,move=0,0
+        from_pos=(0,0)
+        sorted_index = index[::-1]
+       
+        for _index in sorted_index:
+            pos, move = translate_number_to_position_direction(_index+1) ##perchè index va da 0 a 43 noi abbiam mappato da 1 a 44
+            from_pos = translate_number_to_position(pos)#from_pos =Tuple[int,int]direction
+            #action=out[_index]
+            self.last_action_value = out[_index]
+            self.last_action_number=_index
+            ok = game._Game__move(from_pos, move, game.current_player_idx)
+            
+            if ok:
+                break
+            
+             
+        return  (from_pos, move) #,action
+
+    
 def translate_number_to_position_direction(number)->tuple[int,Move]:
         #CASELLA 1 TOP LEFT CORNER
         if number == 1:
